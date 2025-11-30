@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .models import ConversationStatus
 
@@ -42,10 +42,17 @@ class ConversationListResponse(BaseModel):
     conversations: List[ConversationResponse]
     total: int
 
+# Context segment for FAISS results
+class ContextSegment(BaseModel):
+    speaker_label: str
+    text: str
+    start_time: float
+    end_time: float
+
 # API Response schemas
 class SuggestedRepliesResponse(BaseModel):
     replies: List[str]
-    context_segments: List[TranscriptSegmentResponse]
+    context_segments: List[ContextSegment]
 
 class SummarizeResponse(BaseModel):
     summary: str

@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     gcc \
     g++ \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -18,11 +19,19 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download models during build (optional, for faster startup)
+# RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+
 # Copy application code
 COPY . .
 
-# Create audio files directory
-RUN mkdir -p audio_files
+# Create directories for data persistence
+RUN mkdir -p audio_files faiss_index
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV OLLAMA_HOST=http://ollama:11434
+ENV OLLAMA_MODEL=llama3
 
 # Expose port
 EXPOSE 8000

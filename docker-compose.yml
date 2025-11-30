@@ -1,25 +1,32 @@
 version: '3.8'
 
 services:
-  # Redis for Celery message broker
+  # Ollama service for LLM inference
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Pull the llama3 model on startup (can be done manually too)
+    # Run: docker exec -it <container> ollama pull llama3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+        # Comment out the GPU section if you don't have a GPU
+
+  # Redis for Celery message broker (optional, kept for backward compatibility)
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    restart: unless-stopped
-
-  # ChromaDB vector database
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - chromadb_data:/chroma/chroma
-    environment:
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
     restart: unless-stopped
 
   # Backend FastAPI service
@@ -32,18 +39,20 @@ services:
     volumes:
       - ./backend:/app
       - audio_files:/app/audio_files
+      - faiss_index:/app/faiss_index
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8000
       - DATABASE_URL=sqlite:///./parallel_mind.db
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=llama3
+      - PYTHONUNBUFFERED=1
     depends_on:
       - redis
-      - chromadb
+      - ollama
     restart: unless-stopped
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  # Celery worker for async processing
+  # Celery worker for async processing (optional)
   worker:
     build:
       context: ./backend
@@ -51,14 +60,15 @@ services:
     volumes:
       - ./backend:/app
       - audio_files:/app/audio_files
+      - faiss_index:/app/faiss_index
     environment:
       - REDIS_URL=redis://redis:6379/0
-      - CHROMA_HOST=chromadb
-      - CHROMA_PORT=8000
       - DATABASE_URL=sqlite:///./parallel_mind.db
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=llama3
     depends_on:
       - redis
-      - chromadb
+      - ollama
       - backend
     restart: unless-stopped
     command: celery -A app.celery_worker worker --loglevel=info
@@ -93,5 +103,6 @@ services:
 
 volumes:
   redis_data:
-  chromadb_data:
+  ollama_data:
   audio_files:
+  faiss_index:

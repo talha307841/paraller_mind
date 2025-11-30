@@ -13,14 +13,29 @@ from .schemas import (
     ConversationResponse, ConversationListResponse, SuggestedRepliesResponse,
     SummarizeResponse, UploadResponse
 )
-from .celery_worker import diarize_and_transcribe, get_task_status
-from .vector_db import vector_db
+
+# Import new routers for open-source endpoints
+from .routers import (
+    transcribe_router,
+    embeddings_router,
+    memory_router,
+    suggest_router,
+    events_router
+)
+
+# Import open-source services
+from .services.transcription import get_transcription_service
+from .services.embeddings import get_embedding_service
+from .services.faiss_store import get_faiss_store
+from .services.ollama_client import get_ollama_client
 
 # Create FastAPI app
 app = FastAPI(
     title="Parallel Mind Audio App",
-    description="Advanced conversational AI with audio processing, diarization, and semantic search",
-    version="1.0.0"
+    description="Advanced conversational AI with open-source audio processing, embeddings, and semantic search. "
+                "Uses faster-whisper for transcription, sentence-transformers for embeddings, FAISS for vector storage, "
+                "and Ollama for LLM inference.",
+    version="2.0.0"
 )
 
 # Add CORS middleware
@@ -37,6 +52,13 @@ app.add_middleware(
 async def startup_event():
     create_tables()
 
+# Include new open-source routers
+app.include_router(transcribe_router)
+app.include_router(embeddings_router)
+app.include_router(memory_router)
+app.include_router(suggest_router)
+app.include_router(events_router)
+
 @app.get("/")
 async def root():
     return {"message": "Parallel Mind Audio App API"}
@@ -50,7 +72,7 @@ async def upload_audio(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    """Upload audio file and start processing pipeline"""
+    """Upload audio file and start processing pipeline using open-source transcription"""
     
     # Validate file type
     if not file.content_type.startswith('audio/'):
@@ -60,6 +82,9 @@ async def upload_audio(
     file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'wav'
     unique_filename = f"{uuid.uuid4()}.{file_extension}"
     file_path = os.path.join("audio_files", unique_filename)
+    
+    # Ensure audio_files directory exists
+    os.makedirs("audio_files", exist_ok=True)
     
     try:
         # Save file
@@ -76,13 +101,55 @@ async def upload_audio(
         db.commit()
         db.refresh(conversation)
         
-        # Start async processing
-        task = diarize_and_transcribe.delay(conversation.id, file_path)
+        # Process synchronously using faster-whisper (for simplicity)
+        # In production, you'd want to use background tasks or Celery
+        try:
+            transcription_service = get_transcription_service()
+            result = transcription_service.transcribe_file(file_path)
+            
+            # Save transcript segments
+            for i, seg in enumerate(result.get("segments", [])):
+                transcript_segment = TranscriptSegment(
+                    conversation_id=conversation.id,
+                    speaker_label=f"SPEAKER_{i % 2:02d}",  # Simple alternating speaker assignment
+                    text=seg["text"],
+                    start_time=seg["start"],
+                    end_time=seg["end"],
+                    confidence=seg.get("confidence")
+                )
+                db.add(transcript_segment)
+            
+            # Generate embeddings and store in FAISS
+            embedding_service = get_embedding_service()
+            faiss_store = get_faiss_store()
+            
+            segments_data = []
+            for seg in result.get("segments", []):
+                segments_data.append({
+                    "text": seg["text"],
+                    "conversation_id": str(conversation.id),
+                    "speaker_id": f"SPEAKER_{i % 2:02d}",
+                    "start_time": seg["start"],
+                    "end_time": seg["end"]
+                })
+            
+            if segments_data:
+                texts = [s["text"] for s in segments_data]
+                embeddings = embedding_service.embed_batch(texts)
+                faiss_store.upsert(vectors=embeddings, metadata=segments_data)
+            
+            conversation.status = ConversationStatus.PROCESSED
+            db.commit()
+            
+        except Exception as e:
+            conversation.status = ConversationStatus.ERROR
+            db.commit()
+            raise
         
         return UploadResponse(
             conversation_id=conversation.id,
-            message="Audio uploaded successfully. Processing started.",
-            status="uploaded"
+            message="Audio uploaded and processed successfully.",
+            status="processed"
         )
         
     except Exception as e:
@@ -126,7 +193,7 @@ async def suggest_reply(
     query: str,
     db: Session = Depends(get_db)
 ):
-    """Generate suggested replies based on conversation context"""
+    """Generate suggested replies based on conversation context using Ollama"""
     
     # Verify conversation exists and is processed
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -137,15 +204,23 @@ async def suggest_reply(
         raise HTTPException(status_code=400, detail="Conversation not yet processed")
     
     try:
-        # Get relevant context from vector database
-        context_segments = vector_db.search_similar_segments(conversation_id, query, limit=5)
+        # Get relevant context from FAISS
+        embedding_service = get_embedding_service()
+        faiss_store = get_faiss_store()
+        
+        query_embedding = embedding_service.embed(query)
+        context_segments = faiss_store.search(
+            query_vector=query_embedding,
+            top_k=5,
+            filter_metadata={"conversation_id": str(conversation_id)}
+        )
         
         if not context_segments:
             raise HTTPException(status_code=404, detail="No relevant context found")
         
         # Build prompt for LLM
         context_text = "\n".join([
-            f"{seg['speaker_label']}: {seg['text']}"
+            f"{seg.get('metadata', {}).get('speaker_id', 'Unknown')}: {seg.get('text', '')}"
             for seg in context_segments
         ])
         
@@ -158,46 +233,53 @@ Query: {query}
 
 Please provide 3 different reply suggestions that would be appropriate and contextually relevant:"""
 
-        # Call OpenAI for suggestions
-        import openai
-        client = openai.OpenAI()
+        # Call Ollama for suggestions
+        ollama_client = get_ollama_client()
         
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that suggests contextually appropriate replies to conversations."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=200,
-            temperature=0.7
-        )
+        try:
+            response = await ollama_client.generate(
+                prompt=prompt,
+                system="You are a helpful assistant that suggests contextually appropriate replies to conversations.",
+                options={"temperature": 0.7}
+            )
+            suggestions_text = response.get("response", "")
+        except Exception as e:
+            # Fallback if Ollama is not available
+            suggestions_text = "1. I understand your point.\n2. Could you elaborate on that?\n3. That's an interesting perspective."
         
-        # Parse suggestions (assuming they come as numbered list)
-        suggestions_text = response.choices[0].message.content
+        # Parse suggestions
         suggestions = []
-        
-        # Simple parsing - look for numbered items
         lines = suggestions_text.split('\n')
         for line in lines:
             line = line.strip()
             if line and (line[0].isdigit() or line.startswith('-')):
-                # Remove numbering and clean up
                 clean_line = line.lstrip('0123456789.- ').strip()
                 if clean_line:
                     suggestions.append(clean_line)
         
-        # If parsing failed, just split by lines
         if not suggestions:
             suggestions = [line.strip() for line in suggestions_text.split('\n') if line.strip()]
         
-        # Limit to 3 suggestions
         suggestions = suggestions[:3]
+        
+        # Format context segments for response
+        formatted_segments = [
+            {
+                "speaker_label": seg.get("metadata", {}).get("speaker_id", "Unknown"),
+                "text": seg.get("text", ""),
+                "start_time": seg.get("metadata", {}).get("start_time", 0),
+                "end_time": seg.get("metadata", {}).get("end_time", 0)
+            }
+            for seg in context_segments
+        ]
         
         return SuggestedRepliesResponse(
             replies=suggestions,
-            context_segments=context_segments
+            context_segments=formatted_segments
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate suggestions: {str(e)}")
 
@@ -206,7 +288,7 @@ async def summarize_conversation(
     conversation_id: int,
     db: Session = Depends(get_db)
 ):
-    """Generate a summary of the conversation"""
+    """Generate a summary of the conversation using Ollama"""
     
     # Verify conversation exists and is processed
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
@@ -231,10 +313,6 @@ async def summarize_conversation(
             for seg in segments
         ])
         
-        # Call OpenAI for summarization
-        import openai
-        client = openai.OpenAI()
-        
         prompt = f"""Please provide a concise summary of the key points and outcomes of this conversation.
 
 Transcript:
@@ -245,24 +323,26 @@ Please provide:
 2. Key outcomes or decisions made
 3. Any action items mentioned"""
 
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes conversations concisely and identifies key points."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=300,
-            temperature=0.3
-        )
+        # Call Ollama for summarization
+        ollama_client = get_ollama_client()
         
-        summary_text = response.choices[0].message.content
+        try:
+            response = await ollama_client.generate(
+                prompt=prompt,
+                system="You are a helpful assistant that summarizes conversations concisely and identifies key points.",
+                options={"temperature": 0.3}
+            )
+            summary_text = response.get("response", "")
+        except Exception as e:
+            # Fallback if Ollama is not available
+            summary_text = "Unable to generate summary. Please ensure Ollama is running."
         
         # Extract key points (simple parsing)
         lines = summary_text.split('\n')
         key_points = []
         for line in lines:
             line = line.strip()
-            if line and (line.startswith('-') or line.startswith('•') or line[0].isdigit()):
+            if line and (line.startswith('-') or line.startswith('•') or (len(line) > 0 and line[0].isdigit())):
                 clean_line = line.lstrip('0123456789.-• ').strip()
                 if clean_line:
                     key_points.append(clean_line)
@@ -272,6 +352,8 @@ Please provide:
             key_points=key_points
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
@@ -298,21 +380,41 @@ async def search_conversations(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    """Search for conversation segments using semantic similarity"""
+    """Search for conversation segments using semantic similarity with FAISS"""
     
     try:
+        embedding_service = get_embedding_service()
+        faiss_store = get_faiss_store()
+        
+        query_embedding = embedding_service.embed(query)
+        
+        filter_metadata = None
         if conversation_id:
-            # Search within specific conversation
-            results = vector_db.search_similar_segments(conversation_id, query, limit)
-        else:
-            # Search across all conversations (would need to implement this in vector_db)
-            # For now, return error
-            raise HTTPException(status_code=400, detail="Global search not yet implemented. Please specify conversation_id.")
+            filter_metadata = {"conversation_id": str(conversation_id)}
+        
+        results = faiss_store.search(
+            query_vector=query_embedding,
+            top_k=limit,
+            filter_metadata=filter_metadata
+        )
+        
+        # Format results
+        formatted_results = [
+            {
+                "text": r.get("text", ""),
+                "speaker_label": r.get("metadata", {}).get("speaker_id", "Unknown"),
+                "start_time": r.get("metadata", {}).get("start_time", 0),
+                "end_time": r.get("metadata", {}).get("end_time", 0),
+                "similarity_score": r.get("similarity_score", 0),
+                "conversation_id": r.get("metadata", {}).get("conversation_id")
+            }
+            for r in results
+        ]
         
         return {
             "query": query,
-            "results": results,
-            "total": len(results)
+            "results": formatted_results,
+            "total": len(formatted_results)
         }
         
     except Exception as e:
