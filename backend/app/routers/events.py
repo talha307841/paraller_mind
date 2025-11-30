@@ -3,7 +3,7 @@ WebSocket endpoint for real-time event streaming.
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any, Set
+from typing import List, Optional, Dict, Any, Set, AsyncIterator
 import json
 import asyncio
 import logging

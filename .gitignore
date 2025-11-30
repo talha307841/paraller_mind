@@ -113,6 +113,8 @@ Thumbs.db
 node_modules/
 npm-debug.log
 yarn-error.log
+dist/
+.vite/
 
 # FAISS index (can be regenerated)
 faiss_index/

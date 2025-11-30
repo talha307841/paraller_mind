@@ -1,6 +1,23 @@
 """Tests for schema validation."""
 import pytest
 from pydantic import ValidationError
+import sys
+from unittest.mock import MagicMock
+
+# Mock heavy ML dependencies before importing
+if 'faster_whisper' not in sys.modules:
+    sys.modules['faster_whisper'] = MagicMock()
+    sys.modules['sentence_transformers'] = MagicMock()
+    sys.modules['faiss'] = MagicMock()
+    sys.modules['ollama'] = MagicMock()
+    sys.modules['torch'] = MagicMock()
+    sys.modules['transformers'] = MagicMock()
+    sys.modules['librosa'] = MagicMock()
+    sys.modules['soundfile'] = MagicMock()
+    sys.modules['ctranslate2'] = MagicMock()
+    sys.modules['celery'] = MagicMock()
+    sys.modules['redis'] = MagicMock()
+
 from app.routers.transcribe import TranscribeRequest, TranscribeResponse, TranscriptSegment
 from app.routers.embeddings import EmbeddingRequest, EmbeddingResponse
 from app.routers.memory import UpsertRequest, SearchRequest, MemoryMetadata

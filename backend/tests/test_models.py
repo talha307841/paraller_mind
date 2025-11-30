@@ -1,6 +1,25 @@
 """Tests for database models."""
 import pytest
 from datetime import datetime
+
+# Import must happen after conftest.py sets up mocks
+import sys
+from unittest.mock import MagicMock
+
+# Mock heavy ML dependencies before importing
+if 'faster_whisper' not in sys.modules:
+    sys.modules['faster_whisper'] = MagicMock()
+    sys.modules['sentence_transformers'] = MagicMock()
+    sys.modules['faiss'] = MagicMock()
+    sys.modules['ollama'] = MagicMock()
+    sys.modules['torch'] = MagicMock()
+    sys.modules['transformers'] = MagicMock()
+    sys.modules['librosa'] = MagicMock()
+    sys.modules['soundfile'] = MagicMock()
+    sys.modules['ctranslate2'] = MagicMock()
+    sys.modules['celery'] = MagicMock()
+    sys.modules['redis'] = MagicMock()
+
 from app.models import Conversation, TranscriptSegment, ConversationStatus
 
 

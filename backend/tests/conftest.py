@@ -1,12 +1,44 @@
 """Pytest configuration and fixtures for backend tests."""
 import pytest
+import sys
+from unittest.mock import MagicMock, AsyncMock, patch
+
+# Mock heavy ML dependencies before importing anything else
+mock_whisper = MagicMock()
+mock_sentence_transformers = MagicMock()
+mock_faiss = MagicMock()
+mock_ollama = MagicMock()
+mock_torch = MagicMock()
+mock_transformers = MagicMock()
+mock_librosa = MagicMock()
+mock_soundfile = MagicMock()
+mock_ctranslate2 = MagicMock()
+mock_celery = MagicMock()
+mock_redis = MagicMock()
+
+# Add mocks to sys.modules
+sys.modules['faster_whisper'] = mock_whisper
+sys.modules['sentence_transformers'] = mock_sentence_transformers
+sys.modules['faiss'] = mock_faiss
+sys.modules['ollama'] = mock_ollama
+sys.modules['torch'] = mock_torch
+sys.modules['transformers'] = mock_transformers
+sys.modules['librosa'] = mock_librosa
+sys.modules['soundfile'] = mock_soundfile
+sys.modules['ctranslate2'] = mock_ctranslate2
+sys.modules['celery'] = mock_celery
+sys.modules['redis'] = mock_redis
+
+# Now import the application
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.database import Base, get_db
+from app.database import get_db
+# Import Base from models, not database (they have separate Base)
+from app.models import Base
 
 
 # Create in-memory SQLite database for testing
