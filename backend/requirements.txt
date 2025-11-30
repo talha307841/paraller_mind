@@ -1,20 +1,39 @@
+# Core FastAPI stack
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-celery==5.3.4
-redis==5.0.1
-sqlalchemy==2.0.23
-openai==1.3.7
-chromadb==0.4.18
-pyannote.audio==3.1.1
 python-multipart==0.0.6
 httpx==0.25.2
 pydantic==2.5.0
 python-dotenv==1.0.0
 aiofiles==23.2.1
+websockets==12.0
+
+# Database
+sqlalchemy==2.0.23
+
+# Task queue (optional, kept for existing functionality)
+celery==5.3.4
+redis==5.0.1
+
+# Scientific computing
 numpy==1.24.3
 scipy==1.11.4
+
+# Audio processing
 librosa==0.10.1
 soundfile==0.12.1
+
+# Open-source transcription (faster-whisper)
+faster-whisper==1.0.3
+ctranslate2==4.4.0
+
+# Open-source embeddings (sentence-transformers)
+sentence-transformers==2.2.2
 torch==2.1.1
-torchaudio==2.1.1
 transformers==4.35.2
+
+# Open-source vector store (FAISS CPU)
+faiss-cpu==1.7.4
+
+# Ollama client for LLM
+ollama==0.3.3

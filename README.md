@@ -1,46 +1,44 @@
-# 🧠 Parallel Mind - Advanced Conversational AI
+# 🧠 Parallel Mind - Open-Source Conversational AI
 
-A complete, containerized full-stack application that records audio, diarizes it, transcribes it, generates embeddings for semantic search, maintains conversation history, and uses OpenAI's LLM to provide summaries and suggest context-aware replies.
+A complete, containerized full-stack application using **only open-source components** for audio processing, semantic search, and AI-powered conversation assistance. Records audio, transcribes it using faster-whisper, generates embeddings with sentence-transformers, stores vectors in FAISS, and uses Ollama with Llama3 for intelligent responses.
 
 ## 🚀 Features
 
 - **Audio Recording**: Frontend UI to start/stop recording using MediaRecorder API
-- **Speaker Diarization**: Advanced AI-powered speaker identification using PyAnnote
-- **Transcription**: High-quality audio-to-text conversion using OpenAI Whisper
-- **Semantic Search**: Vector-based search using ChromaDB and OpenAI embeddings
-- **AI Insights**: LLM-powered conversation summaries and suggested replies
-- **Real-time Processing**: Asynchronous audio processing pipeline with Celery
+- **Local Transcription**: High-quality audio-to-text using faster-whisper (no API keys needed!)
+- **Semantic Search**: Vector-based search using FAISS and sentence-transformers embeddings
+- **AI Insights**: Llama3-powered summaries and suggestions via Ollama
+- **Real-time Streaming**: WebSocket support for live suggestions
+- **100% Open Source**: No paid API dependencies - runs completely offline
 - **Modern UI**: Beautiful React frontend with Tailwind CSS
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │    Backend      │    │   Celery        │
-│   (React)       │◄──►│   (FastAPI)     │◄──►│   Worker        │
+│   Frontend      │    │    Backend      │    │   Ollama        │
+│   (React)       │◄──►│   (FastAPI)     │◄──►│   (Llama3)      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       │                       │
-         ▼                       ▼                       ▼
+         │                       │                       
+         │                       │                       
+         ▼                       ▼                       
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│     Nginx       │    │   ChromaDB      │    │     Redis       │
-│   (Reverse      │    │  (Vector DB)    │    │  (Message      │
-│    Proxy)       │    │                 │    │   Broker)       │
+│     Nginx       │    │     FAISS       │    │  faster-whisper │
+│   (Reverse      │    │  (Vector DB)    │    │  (Transcription)│
+│    Proxy)       │    │                 │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## 🛠️ Tech Stack
 
-### Backend
+### Backend (100% Open Source)
 - **FastAPI**: Modern, fast web framework for building APIs
+- **faster-whisper**: Local speech-to-text transcription (CTranslate2)
+- **sentence-transformers**: Local embeddings with "all-MiniLM-L6-v2"
+- **FAISS**: Facebook AI Similarity Search for vector storage
+- **Ollama**: Local LLM inference with Llama3
 - **SQLAlchemy**: SQL toolkit and ORM
-- **Celery**: Distributed task queue for async processing
-- **Redis**: Message broker and caching
-- **ChromaDB**: Vector database for embeddings
-
-### AI Services
-- **OpenAI API**: Whisper transcription, GPT models, embeddings
-- **PyAnnote**: Speaker diarization (requires Hugging Face token)
+- **Redis**: Message broker (optional)
 
 ### Frontend
 - **React 18**: Modern UI framework
@@ -56,177 +54,248 @@ A complete, containerized full-stack application that records audio, diarizes it
 ## 📋 Prerequisites
 
 - Docker and Docker Compose
-- OpenAI API key
-- Hugging Face token (for PyAnnote)
-- At least 4GB RAM available for containers
+- At least 8GB RAM available for containers
+- GPU recommended for faster transcription (but not required)
+- ~10GB disk space for models
 
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
 ```bash
 git clone <repository-url>
-cd parallel-mind-audio-app
+cd parallel-mind
 ```
 
-### 2. Environment Configuration
-Create a `.env` file in the root directory:
+### 2. Start All Services
 ```bash
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Hugging Face Configuration (for PyAnnote diarization)
-HF_TOKEN=your_huggingface_token_here
-
-# Redis Configuration
-REDIS_URL=redis://redis:6379/0
-
-# ChromaDB Configuration
-CHROMA_HOST=chromadb
-CHROMA_PORT=8000
-
-# Database Configuration
-DATABASE_URL=sqlite:///./parallel_mind.db
-
-# Backend Configuration
-BACKEND_HOST=0.0.0.0
-BACKEND_PORT=8000
-
-# Frontend Configuration
-VITE_API_BASE_URL=http://localhost:8001
-
-# Logging Configuration
-LOG_LEVEL=INFO
-
-# Security Configuration
-CORS_ORIGINS=*
-```
-
-### 3. Start the Application
-```bash
+# Start all containers (this may take a while on first run)
 docker-compose up -d
+
+# Wait for services to be ready
+docker-compose logs -f backend
+```
+
+### 3. Pull the Llama3 Model
+```bash
+# After Ollama container is running, pull the model
+docker exec -it $(docker ps -q -f name=ollama) ollama pull llama3
 ```
 
 ### 4. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8001
-- **ChromaDB**: http://localhost:8000
-- **Nginx**: http://localhost:80
-
-## 🔧 Configuration
-
-### API Keys Setup
-
-#### OpenAI API Key
-1. Visit [OpenAI Platform](https://platform.openai.com/)
-2. Create an account and get your API key
-3. Add it to your `.env` file
-
-#### Hugging Face Token
-1. Visit [Hugging Face](https://huggingface.co/)
-2. Create an account and go to Settings > Access Tokens
-3. Create a new token with read access
-4. Add it to your `.env` file
-
-### Alternative AI Services
-
-If you prefer not to use PyAnnote (which requires GPU for optimal performance), you can use:
-
-- **AssemblyAI**: Professional diarization and transcription service
-- **Deepgram**: High-quality speech recognition API
-
-## 📱 Usage
-
-### 1. Record a Conversation
-1. Navigate to the home page
-2. Click the microphone button to start recording
-3. Speak clearly into your microphone
-4. Click the stop button when finished
-5. Click upload to process the audio
-
-### 2. View Processing Status
-- Monitor the status of your conversation
-- Processing includes: diarization → transcription → embedding generation
-- This may take several minutes for longer recordings
-
-### 3. Explore AI Insights
-Once processing is complete:
-- **View Transcript**: See the full conversation with speaker labels
-- **Generate Summary**: Get AI-powered conversation summary
-- **Get Suggested Replies**: Receive context-aware response suggestions
-- **Semantic Search**: Find specific topics within conversations
-
-### 4. Manage History
-- View all recorded conversations
-- Search through conversation history
-- Access detailed views of each conversation
+- **API Docs**: http://localhost:8001/docs
+- **Ollama**: http://localhost:11434
 
 ## 🔍 API Endpoints
 
-### Audio Processing
-- `POST /api/upload` - Upload audio file and start processing
+### Transcription
+```bash
+# Transcribe audio from base64/PCM data
+POST /api/transcribe
+{
+  "audio_data": "<base64_encoded_audio>",
+  "audio_format": "base64",
+  "sample_rate": 16000
+}
 
-### Conversations
-- `GET /api/conversations` - List all conversations
-- `GET /api/conversations/{id}` - Get conversation details
-- `GET /api/conversations/{id}/status` - Get processing status
+# Transcribe audio file
+POST /api/transcribe/file
+# (multipart/form-data with audio file)
+```
 
-### AI Features
-- `POST /api/conversations/{id}/summarize` - Generate conversation summary
-- `POST /api/conversations/{id}/suggest-reply` - Get suggested replies
-- `GET /api/search` - Semantic search within conversations
+### Embeddings
+```bash
+# Generate embedding for text
+POST /api/embeddings
+{
+  "text": "Your text here"
+}
 
-### Health
-- `GET /health` - Health check endpoint
+# Batch embeddings
+POST /api/embeddings/batch
+{
+  "texts": ["Text 1", "Text 2", "Text 3"]
+}
 
-## 🐳 Docker Services
+# Calculate similarity
+POST /api/embeddings/similarity
+{
+  "text1": "First text",
+  "text2": "Second text"
+}
+```
 
-### Backend Service
-- **Port**: 8001 (mapped from container 8000)
-- **Purpose**: FastAPI application with all endpoints
-- **Dependencies**: Redis, ChromaDB
+### Memory (FAISS Vector Store)
+```bash
+# Upsert transcript chunks
+POST /api/memory/upsert
+{
+  "chunks": [
+    {
+      "text": "Hello, how are you?",
+      "conversation_id": "conv_123",
+      "speaker_id": "speaker_1",
+      "timestamp": "2024-01-01T10:00:00Z"
+    }
+  ]
+}
 
-### Worker Service
-- **Purpose**: Celery worker for async audio processing
-- **Tasks**: Diarization, transcription, embedding generation
-- **Dependencies**: Redis, ChromaDB
+# Search memories
+POST /api/memory/search
+{
+  "query": "greeting",
+  "top_k": 5,
+  "conversation_id": "conv_123"
+}
 
-### Frontend Service
-- **Port**: 3000 (mapped from container 80)
-- **Purpose**: React application served by Nginx
-- **Dependencies**: Backend API
+# Get memory stats
+GET /api/memory/stats
 
-### ChromaDB Service
-- **Port**: 8000
-- **Purpose**: Vector database for embeddings
-- **Persistence**: Docker volume
+# Clear all memories
+POST /api/memory/clear
+```
 
-### Redis Service
-- **Port**: 6379
-- **Purpose**: Message broker for Celery
-- **Persistence**: Docker volume
+### Suggestions (RAG with Ollama)
+```bash
+# Generate suggestion based on context
+POST /api/suggest
+{
+  "text": "What should I reply about the project deadline?",
+  "conversation_id": "conv_123",
+  "top_k": 5,
+  "model": "llama3"
+}
 
-### Nginx Service
-- **Port**: 80
-- **Purpose**: Reverse proxy and load balancing
-- **Features**: Rate limiting, gzip compression
+# Get detailed suggestion with RAG context
+POST /api/suggest/detailed
+{
+  "text": "What should I reply?",
+  "top_k": 5
+}
+
+# Check suggestion health
+GET /api/suggest/health
+```
+
+### Real-time Events (WebSocket)
+```bash
+# Connect to WebSocket
+wscat -c ws://localhost:8001/api/events/stream
+
+# Send suggestion request
+{"type": "suggest", "text": "Hello", "conversation_id": "123"}
+
+# Ping/pong
+{"type": "ping"}
+```
+
+### Legacy Endpoints
+```bash
+# Upload audio file
+POST /api/upload
+
+# List conversations
+GET /api/conversations
+
+# Get conversation
+GET /api/conversations/{id}
+
+# Get conversation status
+GET /api/conversations/{id}/status
+
+# Summarize conversation
+POST /api/conversations/{id}/summarize
+
+# Suggest reply
+POST /api/conversations/{id}/suggest-reply?query=...
+
+# Search
+GET /api/search?query=...&conversation_id=...
+
+# Health check
+GET /health
+```
+
+## 📝 Testing the API with curl
+
+### Test Embeddings
+```bash
+# Generate an embedding
+curl -X POST "http://localhost:8001/api/embeddings" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello, how are you today?"}'
+
+# Response:
+# {"embedding": [0.123, -0.456, ...], "dimension": 384, "model": "all-MiniLM-L6-v2"}
+```
+
+### Test Memory Storage
+```bash
+# Store some memories
+curl -X POST "http://localhost:8001/api/memory/upsert" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {"text": "The project deadline is next Friday.", "conversation_id": "test", "speaker_id": "Alice"},
+      {"text": "We need to finish the documentation first.", "conversation_id": "test", "speaker_id": "Bob"},
+      {"text": "I will handle the testing.", "conversation_id": "test", "speaker_id": "Alice"}
+    ]
+  }'
+
+# Search memories
+curl -X POST "http://localhost:8001/api/memory/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "when is the deadline?", "top_k": 3}'
+```
+
+### Test Suggestions (requires Ollama running)
+```bash
+# Generate a suggestion
+curl -X POST "http://localhost:8001/api/suggest" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "What is the project deadline?",
+    "top_k": 3
+  }'
+```
+
+### Test Transcription
+```bash
+# Transcribe an audio file
+curl -X POST "http://localhost:8001/api/transcribe/file" \
+  -F "file=@your_audio.wav"
+```
 
 ## 🔧 Development
 
-### Running in Development Mode
-```bash
-# Backend development
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+### Running Locally (without Docker)
 
-# Frontend development
+```bash
+# 1. Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve &
+ollama pull llama3
+
+# 2. Setup backend
+cd backend
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r requirements.txt
+
+# 3. Run backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 4. Setup frontend (in another terminal)
 cd frontend
 npm install
 npm run dev
+```
 
-# Celery worker
+### Running Tests
+```bash
 cd backend
-celery -A app.celery_worker worker --loglevel=info
+pytest tests/ -v
 ```
 
 ### Building Containers
@@ -248,97 +317,86 @@ docker-compose logs -f
 
 # Specific service
 docker-compose logs -f backend
-docker-compose logs -f worker
+docker-compose logs -f ollama
 ```
+
+## 🐳 Docker Services
+
+| Service | Port | Description |
+|---------|------|-------------|
+| backend | 8001 | FastAPI application |
+| ollama | 11434 | Llama3 LLM server |
+| frontend | 3000 | React application |
+| redis | 6379 | Message broker (optional) |
+| nginx | 80 | Reverse proxy |
 
 ## 🚨 Troubleshooting
 
-### Common Issues
+### Ollama Not Responding
+```bash
+# Check if Ollama is running
+curl http://localhost:11434/api/tags
 
-#### Audio Recording Not Working
-- Ensure microphone permissions are granted in the browser
-- Check if HTTPS is required (some browsers require secure context)
-- Verify audio device is working in system settings
+# Pull model if not present
+docker exec -it $(docker ps -q -f name=ollama) ollama pull llama3
 
-#### Processing Fails
-- Check OpenAI API key is valid and has credits
-- Verify Hugging Face token has proper permissions
-- Check container logs for specific error messages
-- Ensure sufficient system resources (RAM/CPU)
+# Check logs
+docker-compose logs ollama
+```
 
-#### ChromaDB Connection Issues
-- Verify ChromaDB container is running: `docker-compose ps`
-- Check ChromaDB logs: `docker-compose logs chromadb`
-- Ensure proper network connectivity between services
+### Slow Transcription
+- First transcription downloads the model (~150MB for base)
+- GPU acceleration: Ensure CUDA is available
+- Use smaller model: Set `WHISPER_MODEL=tiny` in environment
 
-#### Redis Connection Issues
-- Verify Redis container is running: `docker-compose ps`
-- Check Redis logs: `docker-compose logs redis`
-- Ensure Redis URL is correct in environment variables
+### Memory Issues
+```bash
+# Check container memory usage
+docker stats
 
-### Performance Optimization
+# Reduce model size if needed
+# In docker-compose.yml, add:
+# environment:
+#   - WHISPER_MODEL=tiny  # instead of base
+```
 
-#### For Production Use
-- Use GPU-enabled containers for PyAnnote
-- Implement Redis clustering for high availability
-- Use external ChromaDB instance for persistence
-- Implement proper monitoring and logging
-- Add rate limiting and authentication
+### FAISS Index Issues
+```bash
+# Clear the index
+curl -X POST "http://localhost:8001/api/memory/clear"
 
-#### Resource Requirements
-- **Minimum**: 4GB RAM, 2 CPU cores
-- **Recommended**: 8GB RAM, 4 CPU cores
-- **GPU**: Optional but recommended for PyAnnote
+# Check stats
+curl "http://localhost:8001/api/memory/stats"
+```
 
-## 📊 Monitoring
+## 📊 Resource Requirements
 
-### Health Checks
-- Backend health: `GET /health`
-- Container status: `docker-compose ps`
-- Service logs: `docker-compose logs [service]`
-
-### Metrics to Monitor
-- Audio processing queue length
-- Processing time per conversation
-- API response times
-- Container resource usage
-- Error rates
+| Component | Minimum RAM | Recommended RAM |
+|-----------|-------------|-----------------|
+| Backend + faster-whisper | 2GB | 4GB |
+| Ollama + Llama3 | 4GB | 8GB |
+| FAISS | 512MB | 1GB |
+| Total | 6GB | 12GB+ |
 
 ## 🔒 Security Considerations
 
-- **API Keys**: Never commit API keys to version control
-- **CORS**: Configure CORS origins for production
-- **Rate Limiting**: Implement proper rate limiting
-- **Authentication**: Add user authentication for production use
-- **HTTPS**: Use HTTPS in production environments
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+- **No API Keys**: This solution runs entirely locally
+- **CORS**: Configure for production
+- **Authentication**: Add auth for production use
+- **HTTPS**: Use HTTPS in production
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- OpenAI for Whisper and GPT models
-- PyAnnote team for speaker diarization
-- ChromaDB for vector database
-- FastAPI and React communities
-
-## 📞 Support
-
-For issues and questions:
-1. Check the troubleshooting section
-2. Review container logs
-3. Open an issue on GitHub
-4. Check the documentation
+- [faster-whisper](https://github.com/guillaumekln/faster-whisper) - Fast Whisper transcription
+- [sentence-transformers](https://www.sbert.net/) - State-of-the-art embeddings
+- [FAISS](https://github.com/facebookresearch/faiss) - Efficient similarity search
+- [Ollama](https://ollama.ai/) - Run LLMs locally
+- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
 
 ---
 
-**Note**: This is a complex application with multiple AI services. Processing times and accuracy depend on audio quality, conversation length, and available computational resources.
+**Note**: First run may take longer as models are downloaded. Ensure stable internet connection for initial setup.
