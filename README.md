@@ -1,6 +1,30 @@
 # 🧠 Parallel Mind - Open-Source Conversational AI
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![React 18](https://img.shields.io/badge/react-18-blue.svg)](https://reactjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+
 A complete, containerized full-stack application using **only open-source components** for audio processing, semantic search, and AI-powered conversation assistance. Records audio, transcribes it using faster-whisper, generates embeddings with sentence-transformers, stores vectors in FAISS, and uses Ollama with Llama3 for intelligent responses.
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Prerequisites](#-prerequisites)
+- [Quick Start](#-quick-start)
+- [API Endpoints](#-api-endpoints)
+- [Testing](#-testing)
+- [Development](#-development)
+- [Docker Services](#-docker-services)
+- [Troubleshooting](#-troubleshooting)
+- [Resource Requirements](#-resource-requirements)
+- [Security Considerations](#-security-considerations)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
 
 ## 🚀 Features
 
@@ -294,9 +318,33 @@ npm run dev
 
 ### Running Tests
 ```bash
+# Backend tests
 cd backend
-pytest tests/ -v
+pip install pytest pytest-asyncio pytest-cov httpx
+pytest tests/ -v --cov=app --cov-report=term-missing
+
+# Frontend tests
+cd frontend
+npm install --save-dev vitest @testing-library/react @testing-library/jest-dom jsdom
+npm test
+
+# Run all tests with coverage report
+npm run test:coverage
 ```
+
+## 🧪 Testing
+
+The project includes comprehensive test suites for both frontend and backend:
+
+### Backend Tests (`backend/tests/`)
+- **API Tests**: Test all REST endpoints
+- **Service Tests**: Test transcription, embeddings, and FAISS services
+- **Integration Tests**: Test end-to-end workflows
+
+### Frontend Tests (`frontend/src/__tests__/`)
+- **Component Tests**: Test React components
+- **Hook Tests**: Test custom hooks
+- **Integration Tests**: Test page components
 
 ### Building Containers
 ```bash
@@ -387,7 +435,34 @@ curl "http://localhost:8001/api/memory/stats"
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and add tests
+4. **Run tests**: Ensure all tests pass
+   ```bash
+   # Backend tests
+   cd backend && pytest tests/ -v
+   
+   # Frontend tests
+   cd frontend && npm test
+   ```
+5. **Commit your changes**: `git commit -m 'Add amazing feature'`
+6. **Push to the branch**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
+
+### Development Guidelines
+
+- Follow PEP 8 for Python code
+- Use ESLint for JavaScript/React code
+- Write tests for new features
+- Update documentation as needed
+- Keep commits atomic and descriptive
 
 ## 🙏 Acknowledgments
 
