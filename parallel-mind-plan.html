@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallel Mind — Project Bible</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,400&family=Unbounded:wght@400;700;900&display=swap');
+
+:root {
+  --bg: #040404;
+  --surface: #0c0c0c;
+  --border: #1c1c1c;
+  --green: #00ff88;
+  --cyan: #00d4ff;
+  --yellow: #f5e642;
+  --red: #ff4444;
+  --purple: #bb88ff;
+  --text: #e8e8e8;
+  --muted: #555;
+  --dim: #333;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Scanline effect */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ─── HEADER ─── */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding: 60px 48px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.sys-tag {
+  color: var(--green);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sys-tag::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(40px, 8vw, 96px);
+  font-weight: 900;
+  line-height: 0.88;
+  letter-spacing: -3px;
+  margin-bottom: 32px;
+}
+
+h1 .line2 { color: var(--green); }
+h1 .line3 { color: var(--dim); font-size: 0.5em; letter-spacing: -1px; }
+
+.header-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  margin-top: 40px;
+}
+
+@media (max-width: 700px) {
+  .header-meta { grid-template-columns: repeat(2, 1fr); }
+  .header { padding: 40px 20px 32px; }
+  h1 { font-size: 36px; }
+}
+
+.meta-box {
+  background: var(--surface);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.meta-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.meta-val {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+/* ─── SHARED LAYOUT ─── */
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+@media (max-width: 700px) { .wrap { padding: 0 20px; } }
+
+.block {
+  padding: 60px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.block-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.block-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  letter-spacing: -1px;
+}
+
+/* ─── CONCEPT CARD ─── */
+.concept {
+  background: var(--surface);
+  border: 1px solid var(--green);
+  padding: 36px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.concept::before {
+  content: 'PARALLEL MIND';
+  position: absolute;
+  right: -60px;
+  bottom: -20px;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 64px;
+  font-weight: 900;
+  color: var(--green);
+  opacity: 0.03;
+  letter-spacing: 6px;
+  pointer-events: none;
+}
+
+.concept p {
+  color: #aaa;
+  line-height: 2;
+  max-width: 700px;
+  margin-bottom: 16px;
+}
+
+.concept p:last-child { margin-bottom: 0; }
+
+.concept strong { color: var(--green); font-weight: 600; }
+
+/* ─── ARCHITECTURE DIAGRAM ─── */
+.arch {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 32px;
+  font-family: 'IBM Plex Mono', monospace;
+  overflow-x: auto;
+}
+
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.arch-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.arch-node {
+  border: 1px solid;
+  padding: 10px 16px;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.node-green { border-color: var(--green); color: var(--green); }
+.node-cyan { border-color: var(--cyan); color: var(--cyan); }
+.node-yellow { border-color: var(--yellow); color: var(--yellow); }
+.node-purple { border-color: var(--purple); color: var(--purple); }
+.node-red { border-color: var(--red); color: var(--red); }
+
+.arch-arrow {
+  color: var(--dim);
+  font-size: 16px;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+.arch-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 4px 0;
+  width: 100%;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+/* ─── HARDWARE TABLE ─── */
+.hw-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hw-table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hw-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  font-size: 12px;
+}
+
+.hw-table tr:hover td { background: #0f0f0f; }
+
+.hw-table td:first-child { color: var(--text); font-weight: 600; }
+.hw-table td:nth-child(2) { color: var(--muted); }
+.hw-table td:nth-child(3) { color: var(--yellow); white-space: nowrap; }
+.hw-table td:nth-child(4) { color: var(--green); font-size: 11px; }
+
+.hw-total {
+  background: #0f0f0f;
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.hw-total .label { color: var(--muted); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; }
+.hw-total .amount { font-family: 'Unbounded', sans-serif; font-size: 20px; color: var(--yellow); }
+
+/* ─── TECH STACK ─── */
+.stack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+}
+
+@media (max-width: 700px) { .stack-grid { grid-template-columns: 1fr; } }
+
+.stack-card {
+  background: var(--surface);
+  padding: 24px;
+  border-top: 2px solid transparent;
+}
+
+.stack-card.green { border-top-color: var(--green); }
+.stack-card.cyan { border-top-color: var(--cyan); }
+.stack-card.yellow { border-top-color: var(--yellow); }
+.stack-card.purple { border-top-color: var(--purple); }
+.stack-card.red { border-top-color: var(--red); }
+
+.stack-card h4 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stack-card.green h4 { color: var(--green); }
+.stack-card.cyan h4 { color: var(--cyan); }
+.stack-card.yellow h4 { color: var(--yellow); }
+.stack-card.purple h4 { color: var(--purple); }
+.stack-card.red h4 { color: var(--red); }
+
+.stack-card ul { list-style: none; }
+.stack-card ul li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  color: #999;
+  font-size: 11px;
+  display: flex;
+  gap: 8px;
+}
+
+.stack-card ul li:last-child { border: none; }
+.stack-card ul li::before { content: '›'; color: var(--dim); }
+
+/* ─── EPISODES ─── */
+.episodes { display: flex; flex-direction: column; gap: 1px; }
+
+.ep {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.ep:hover { border-color: #2a2a2a; }
+
+.ep-num-col {
+  background: #080808;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  border-right: 1px solid var(--border);
+}
+
+.ep-num {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--dim);
+}
+
+.ep-body { padding: 20px 24px; }
+
+.ep-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.ep-hook {
+  font-size: 11px;
+  color: var(--green);
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.ep-desc { font-size: 11px; color: var(--muted); line-height: 1.8; }
+
+.ep-meta {
+  padding: 20px 20px 20px 16px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.ep-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border: 1px solid;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ep-tag.channel-first { color: var(--yellow); border-color: var(--yellow); }
+.ep-tag.banger { color: var(--red); border-color: var(--red); }
+.ep-tag.technical { color: var(--cyan); border-color: var(--cyan); }
+.ep-tag.comedy { color: var(--purple); border-color: var(--purple); }
+.ep-tag.finale { color: var(--green); border-color: var(--green); }
+
+@media (max-width: 700px) {
+  .ep { grid-template-columns: 50px 1fr; }
+  .ep-meta { display: none; }
+}
+
+/* ─── CHALLENGES ─── */
+.challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+}
+
+@media (max-width: 700px) { .challenge-grid { grid-template-columns: 1fr; } }
+
+.challenge {
+  background: var(--surface);
+  padding: 24px;
+  border-left: 2px solid var(--red);
+}
+
+.challenge h4 {
+  color: var(--red);
+  font-family: 'Unbounded', sans-serif;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.challenge p { font-size: 11px; color: var(--muted); line-height: 1.8; margin-bottom: 10px; }
+
+.fix {
+  background: #080808;
+  border: 1px solid #1a1a1a;
+  padding: 10px 14px;
+  font-size: 11px;
+}
+
+.fix .fix-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+.fix p { color: #777; margin: 0; }
+
+/* ─── FILMING TIPS ─── */
+.tips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; }
+@media (max-width: 700px) { .tips { grid-template-columns: 1fr; } }
+
+.tip {
+  background: var(--surface);
+  padding: 20px;
+}
+
+.tip-icon { font-size: 24px; margin-bottom: 10px; }
+.tip h4 { font-size: 12px; font-weight: 600; color: var(--cyan); margin-bottom: 6px; }
+.tip p { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+/* ─── FOOTER ─── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 40px 48px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-name {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--green);
+}
+
+.footer-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+.footer-right { font-size: 10px; color: var(--dim); text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="sys-tag">System :: Project Bible v1.0 · Active</div>
+  <h1>
+    PARALLEL<br>
+    <span class="line2">MIND</span><br>
+    <span class="line3">PROJECT</span>
+  </h1>
+  <div class="header-meta">
+    <div class="meta-box">
+      <div class="meta-label">Status</div>
+      <div class="meta-val">Pre-Build</div>
+    </div>
+    <div class="meta-box">
+      <div class="meta-label">Episodes</div>
+      <div class="meta-val">8 Videos</div>
+    </div>
+    <div class="meta-box">
+      <div class="meta-label">Est. Budget</div>
+      <div class="meta-val">~$180</div>
+    </div>
+    <div class="meta-box">
+      <div class="meta-label">LLM Cost</div>
+      <div class="meta-val">$0 (NVIDIA)</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONCEPT -->
+<div class="wrap">
+<div class="block">
+  <div class="block-label">// What is this</div>
+  <div class="block-title">The Core Concept</div>
+
+  <div class="concept">
+    <p>
+      <strong>Parallel Mind</strong> is a wearable AI memory system built by a homeless-channel-guy software engineer with $0 cloud budget and a Raspberry Pi. It listens to every conversation happening around you, transcribes them in real-time, builds a memory of your life — and when you forget something, you just ask it out loud and it tells you.
+    </p>
+    <p>
+      The Pi runs <strong>always-on speech-to-text</strong> via a small microphone. Every conversation chunk gets transcribed and stored in a <strong>local vector database (RAG)</strong>. When you query it — by voice or through smart glasses — it retrieves the relevant memory and sends it to a <strong>free NVIDIA NIM LLM</strong> (no GPU, no cost) to generate a human response. The response comes back through <strong>bone conduction audio</strong> or a <strong>tiny OLED display</strong> on your glasses.
+    </p>
+    <p>
+      The system is parallel to your mind — running alongside you all the time, remembering what you forget, briefing you before meetings, whispering context during conversations.
+    </p>
+    <p>
+      <strong>The video angle:</strong> "homeless channel guy" builds a wearable AI brain with $180 of hardware and free APIs. Funniest possible presentation. Everything that goes wrong is filmed.
+    </p>
+  </div>
+</div>
+
+<!-- SYSTEM ARCHITECTURE -->
+<div class="block">
+  <div class="block-label">// How it works</div>
+  <div class="block-title">System Architecture</div>
+
+  <div class="arch">
+    <div style="font-size:10px; color: var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom: 20px;">Data Flow</div>
+
+    <div class="arch-diagram">
+
+      <div class="arch-label">INPUT LAYER</div>
+      <div class="arch-row">
+        <div class="arch-node node-green">🎤 Mic Array<br><span style="font-size:9px;opacity:0.6">ReSpeaker Hat</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-green">faster-whisper<br><span style="font-size:9px;opacity:0.6">Local STT on Pi</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-cyan">Topic Tagger<br><span style="font-size:9px;opacity:0.6">Python NLP</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-cyan">ChromaDB<br><span style="font-size:9px;opacity:0.6">Vector Store (local)</span></div>
+      </div>
+
+      <div class="arch-label" style="margin-top:20px;">QUERY LAYER (you ask a question)</div>
+      <div class="arch-row">
+        <div class="arch-node node-yellow">Voice Query<br><span style="font-size:9px;opacity:0.6">Wake word → STT</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-yellow">RAG Retrieval<br><span style="font-size:9px;opacity:0.6">Semantic search</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-purple">NVIDIA NIM API<br><span style="font-size:9px;opacity:0.6">Free LLM (Llama/Qwen)</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-purple">Response<br><span style="font-size:9px;opacity:0.6">JSON → text</span></div>
+      </div>
+
+      <div class="arch-label" style="margin-top:20px;">OUTPUT LAYER</div>
+      <div class="arch-row">
+        <div class="arch-node node-purple">Piper TTS<br><span style="font-size:9px;opacity:0.6">Local text-to-speech</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-green">Bone Conduction<br><span style="font-size:9px;opacity:0.6">Whispers to you</span></div>
+        <div class="arch-arrow">+ or</div>
+        <div class="arch-node node-cyan">OLED Display<br><span style="font-size:9px;opacity:0.6">ESP32 on glasses</span></div>
+      </div>
+
+      <div class="arch-label" style="margin-top:20px;">PROACTIVE MODE (meeting assist)</div>
+      <div class="arch-row">
+        <div class="arch-node node-red">Keyword Trigger<br><span style="font-size:9px;opacity:0.6">"meeting", "project"</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-red">Auto-Brief<br><span style="font-size:9px;opacity:0.6">Past context fetch</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-red">LLM Prompt<br><span style="font-size:9px;opacity:0.6">"What should I ask?"</span></div>
+        <div class="arch-arrow">──›</div>
+        <div class="arch-node node-red">Whisper to You<br><span style="font-size:9px;opacity:0.6">Bone conduction</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- HARDWARE -->
+<div class="block">
+  <div class="block-label">// Buy list</div>
+  <div class="block-title">Hardware Shopping List</div>
+
+  <table class="hw-table">
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Why you need it</th>
+        <th>Est. Cost</th>
+        <th>Priority</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Raspberry Pi 5 (8GB)</td>
+        <td>Main brain. Runs STT + RAG + TTS. 8GB is non-negotiable — 4GB runs out.</td>
+        <td>~$80</td>
+        <td>🔴 Critical</td>
+      </tr>
+      <tr>
+        <td>32GB microSD (fast)</td>
+        <td>OS + all your transcripts + vector DB. Get a fast card (A2 rating).</td>
+        <td>~$10</td>
+        <td>🔴 Critical</td>
+      </tr>
+      <tr>
+        <td>ReSpeaker 2-Mic Pi HAT</td>
+        <td>Purpose-built mic for Pi. Far-field audio, works in noisy rooms. Fits right on the GPIO pins.</td>
+        <td>~$13</td>
+        <td>🔴 Critical</td>
+      </tr>
+      <tr>
+        <td>Bone conduction speaker (USB/BT)</td>
+        <td>Sits on your cheekbone, whispers responses to you without blocking your ears. Ideal output for always-on assistant. Shokz OpenRun Mini or Aftershokz clone.</td>
+        <td>~$25–$50</td>
+        <td>🔴 Critical</td>
+      </tr>
+      <tr>
+        <td>XIAO ESP32S3 Sense</td>
+        <td>Powers the smart glasses. Tiny. Has a camera + mic built in. Wi-Fi. Runs on a small LiPo battery. This is your glasses brain.</td>
+        <td>~$15</td>
+        <td>🟡 Phase 2</td>
+      </tr>
+      <tr>
+        <td>64x32 OLED display (I2C)</td>
+        <td>The tiny screen on the glasses that shows you text responses. Small enough to mount on a frame arm.</td>
+        <td>~$5</td>
+        <td>🟡 Phase 2</td>
+      </tr>
+      <tr>
+        <td>3D printed glasses mount</td>
+        <td>OpenGlass / omiGlass have open-source STL files. Print it, clip it on any glasses frame. If you don't have a printer, a makerspace or online service works.</td>
+        <td>~$3–$8</td>
+        <td>🟡 Phase 2</td>
+      </tr>
+      <tr>
+        <td>LiPo battery (400–600mAh)</td>
+        <td>Powers the ESP32 on your glasses for 4–6 hours. Tiny flat battery that fits inside the printed case.</td>
+        <td>~$6</td>
+        <td>🟡 Phase 2</td>
+      </tr>
+      <tr>
+        <td>USB power bank (small)</td>
+        <td>Powers the Pi when you're walking around. 10,000mAh = ~8 hours of always-on listening.</td>
+        <td>~$15</td>
+        <td>🟡 Phase 2</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="hw-total">
+    <div>
+      <div class="label">Phase 1 Total (Pi + Audio)</div>
+    </div>
+    <div class="amount">~$120</div>
+  </div>
+  <div class="hw-total" style="margin-top:1px;">
+    <div>
+      <div class="label">Full System (incl. Glasses)</div>
+    </div>
+    <div class="amount">~$180</div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="block">
+  <div class="block-label">// Software</div>
+  <div class="block-title">Tech Stack (All Free)</div>
+
+  <div class="stack-grid">
+    <div class="stack-card green">
+      <h4>STT — Speech-to-Text</h4>
+      <ul>
+        <li>faster-whisper (local, Pi-optimized)</li>
+        <li>Whisper base/small model</li>
+        <li>PyAudio for stream capture</li>
+        <li>VAD (silero) for silence detection</li>
+        <li>Chunks audio every ~10 seconds</li>
+      </ul>
+    </div>
+    <div class="stack-card cyan">
+      <h4>Memory — RAG Pipeline</h4>
+      <ul>
+        <li>ChromaDB (local vector database)</li>
+        <li>sentence-transformers for embeddings</li>
+        <li>Topic tagging with spaCy</li>
+        <li>Timestamps + speaker labels stored</li>
+        <li>Semantic similarity search</li>
+      </ul>
+    </div>
+    <div class="stack-card yellow">
+      <h4>LLM — The Brain</h4>
+      <ul>
+        <li>NVIDIA NIM free API (build.nvidia.com)</li>
+        <li>100+ models, $0 cost, no credit card</li>
+        <li>Llama 4 / Qwen 3.5 / DeepSeek-R1</li>
+        <li>OpenAI-compatible SDK</li>
+        <li>~40 requests/min free rate limit</li>
+      </ul>
+    </div>
+    <div class="stack-card purple">
+      <h4>TTS — Voice Output</h4>
+      <ul>
+        <li>Piper TTS (local, fast, natural)</li>
+        <li>Under 1 second generation on Pi 5</li>
+        <li>Streams to bone conduction speaker</li>
+        <li>Custom voice cloning (phase 3)</li>
+      </ul>
+    </div>
+    <div class="stack-card red">
+      <h4>Glasses — ESP32 Output</h4>
+      <ul>
+        <li>XIAO ESP32S3 (Arduino firmware)</li>
+        <li>Receives JSON over WiFi from Pi</li>
+        <li>Renders text on OLED display</li>
+        <li>OpenGlass / omiGlass as base</li>
+        <li>3D printed frame mount</li>
+      </ul>
+    </div>
+    <div class="stack-card" style="border-top-color: #555;">
+      <h4 style="color:#999;">Backup APIs (Free)</h4>
+      <ul>
+        <li>Groq (14,400 req/day free)</li>
+        <li>Google Gemini Flash (free tier)</li>
+        <li>GitHub Models (45+ models free)</li>
+        <li>Use as fallback if NVIDIA rate-limits</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- EPISODE PLAN -->
+<div class="block">
+  <div class="block-label">// The Series</div>
+  <div class="block-title">8-Episode Video Plan</div>
+
+  <div class="episodes">
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">01</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">I'm Building a Brain That Remembers Everything I Forget</div>
+        <div class="ep-hook">"My memory is broken. So I'm building a replacement."</div>
+        <div class="ep-desc">
+          Open with the relatable problem — you forget things constantly. Show the concept: a Pi that listens to your life and answers when you ask. Explain the whole system in 2 minutes using a whiteboard sketch. Order the hardware live on camera. Show the delivery estimate. End on a cliffhanger. This is your CHANNEL LAUNCH video — design the hook for people who don't know you at all.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag channel-first">Channel Opener</div>
+        <div class="ep-tag comedy">Comedy</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">02</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">Hardware Arrives. Some of It Is Wrong. (Obviously.)</div>
+        <div class="ep-hook">"The Pi arrived. The mic did not. The one I ordered instead doesn't fit."</div>
+        <div class="ep-desc">
+          Unbox everything with full drama. Film the wrong items, the missing parts, the cursed aliexpress packaging. Set up the Pi, flash the OS, connect the ReSpeaker HAT. First mic test — does it pick up your voice? First fail: background noise makes the STT transcribe garbage. Show exactly what "faster-whisper on a Pi" looks like when it first tries to work.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag comedy">Comedy</div>
+        <div class="ep-tag technical">Setup</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">03</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">Teaching the Pi to Listen (Without Losing Its Mind)</div>
+        <div class="ep-hook">"It's transcribing everything. Including my fridge humming."</div>
+        <div class="ep-desc">
+          Build the always-on STT pipeline. Implement VAD (voice activity detection) so it only transcribes actual speech. First real conversation transcribed correctly — huge milestone. Show the raw text output scrolling on screen. The comedy: it mishears your accent in increasingly creative ways. Fix that. Demonstrate it running for 30 minutes continuously. Show the .txt file growing.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag technical">Technical</div>
+        <div class="ep-tag comedy">Comedy</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">04</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">Building the Memory: Giving It a Brain, Not Just Ears</div>
+        <div class="ep-hook">"Storing transcripts is not memory. This is memory."</div>
+        <div class="ep-desc">
+          Install ChromaDB. Set up sentence-transformers for embeddings. Build the pipeline: transcript chunk → embedding → stored with timestamp and topic tag. Demonstrate semantic search: type "meeting with client" and pull every conversation about it from the past week. This is the most technically impressive episode — but film it as "explaining it to a 10-year-old." The vector database visualization is excellent visual content.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag technical">Technical</div>
+        <div class="ep-tag banger">Banger</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">05</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">Free AI That Doesn't Suck: Hooking Up the NVIDIA LLM</div>
+        <div class="ep-hook">"$0 for the AI brain. I registered for a free developer account and I'm never paying for inference again."</div>
+        <div class="ep-desc">
+          Sign up for NVIDIA NIM live on camera. Get the API key. Write 10 lines of Python using the OpenAI SDK pointed at NVIDIA. First RAG query: you ask "what did I discuss with John last Tuesday?" — it retrieves the transcript chunks and passes them to the LLM — LLM responds with a perfect summary. Film the moment this first works. It's magic. Make it feel like magic.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag banger">Banger</div>
+        <div class="ep-tag comedy">Comedy</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">06</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">I Wore This Thing for 48 Hours Straight</div>
+        <div class="ep-hook">"Day 1: promising. Day 2: it transcribed my entire argument with my mom."</div>
+        <div class="ep-desc">
+          Real-world stress test. Wear the Pi + bone conduction headset for 48 hours. Film reaction moments throughout. The privacy disaster moments (it recorded something embarrassing — show it). The genuine win moments (it reminded you of something you'd completely forgotten). The meeting test: use it in a real meeting, ask it for context before you go in. Does it actually help? Honest answer.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag banger">Banger</div>
+        <div class="ep-tag comedy">Comedy</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">07</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">The Smart Glasses: Building the World's Jankiest AR Interface</div>
+        <div class="ep-hook">"I 3D printed a case for an ESP32. I taped it to my glasses. I look like an idiot. It actually works."</div>
+        <div class="ep-desc">
+          Build the glasses component. Flash OpenGlass / omiGlass firmware to the XIAO ESP32S3. Print the case (or show the embarrassing tape-and-zip-tie prototype version first). Wire the OLED. Build the Pi → ESP32 communication: Pi sends response text as JSON over WiFi, ESP32 renders it on the OLED. First successful display: LLM response appears on your glasses. Film that reaction.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag comedy">Comedy</div>
+        <div class="ep-tag banger">Banger</div>
+      </div>
+    </div>
+
+    <div class="ep">
+      <div class="ep-num-col">
+        <div class="ep-num">08</div>
+      </div>
+      <div class="ep-body">
+        <div class="ep-title">Parallel Mind: Final Demo, Honest Review, What's Next</div>
+        <div class="ep-hook">"I built a $180 version of what Neuralink charges $500,000 for. It works. Mostly."</div>
+        <div class="ep-desc">
+          Full system demo. Walk through every component. Show the real use cases that worked: meeting briefs, forgotten names, recalled conversations. Show what broke or is still broken: speaker diarization isn't done, sometimes mishears, glasses are uncomfortable. Be brutally honest. Then show the roadmap: speaker mapping, proactive suggestions, better glasses. The ending: wear the whole system for the last 60 seconds of the video — glasses on, Pi in pocket, bone conduction in. Walk out the door.
+        </div>
+      </div>
+      <div class="ep-meta">
+        <div class="ep-tag finale">Finale</div>
+        <div class="ep-tag banger">Banger</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CHALLENGES -->
+<div class="block">
+  <div class="block-label">// What will go wrong (and how to use it)</div>
+  <div class="block-title">Known Challenges → Content Gold</div>
+
+  <div class="challenge-grid">
+
+    <div class="challenge">
+      <h4>Speaker Diarization (Who Said What?)</h4>
+      <p>When multiple people talk, the system can't tell who is who yet. All speech gets mixed into one transcript blob.</p>
+      <div class="fix">
+        <div class="fix-label">The Content Angle</div>
+        <p>Film yourself trying to figure this out. The confusion IS the video. Use it as a cliffhanger for a future episode. For now: tag by topic, not speaker.</p>
+      </div>
+    </div>
+
+    <div class="challenge">
+      <h4>NVIDIA API Rate Limits</h4>
+      <p>~40 requests/min free tier. If you're constantly querying it, you'll hit limits. Slow responses during peak hours.</p>
+      <div class="fix">
+        <div class="fix-label">The Fix + Content</div>
+        <p>Queue system + Groq as fallback. Film the "429 Too Many Requests" error appearing on screen. That's relatable and funny.</p>
+      </div>
+    </div>
+
+    <div class="challenge">
+      <h4>Battery Life on the Go</h4>
+      <p>Pi 5 draws ~5W. A 10,000mAh power bank gives ~8 hours. But it's heavy and warm in your pocket.</p>
+      <div class="fix">
+        <div class="fix-label">The Content Angle</div>
+        <p>Show the "pocket hot potato" problem live on camera. Measure battery drain with a multimeter. The engineering problem of making it smaller = future episode.</p>
+      </div>
+    </div>
+
+    <div class="challenge">
+      <h4>STT Mishearing in Noisy Environments</h4>
+      <p>Coffee shops, loud offices, outdoor spaces — faster-whisper struggles and produces creative transcriptions.</p>
+      <div class="fix">
+        <div class="fix-label">The Content Gold</div>
+        <p>Keep a blooper log of the funniest mishearings. Read them out. "It transcribed 'client brief' as 'client beef' and now that's in the memory forever."</p>
+      </div>
+    </div>
+
+    <div class="challenge">
+      <h4>Privacy (Recording Everything)</h4>
+      <p>You're wearing a microphone that transcribes conversations of people who didn't consent. This is a real ethical issue.</p>
+      <div class="fix">
+        <div class="fix-label">Address It Head-On</div>
+        <p>Make this a dedicated 2-minute segment in Episode 1. Build a physical mute button. Show it. Say clearly you're only testing in your own home and with people who know. This earns trust.</p>
+      </div>
+    </div>
+
+    <div class="challenge">
+      <h4>Glasses Look Ridiculous</h4>
+      <p>A 3D printed ESP32 clipped to glasses frames with an OLED screen is not Meta Ray-Ban.</p>
+      <div class="fix">
+        <div class="fix-label">That IS the Brand</div>
+        <p>Lean into it hard. "Homeless-channel-guy builds AR glasses." The jank is the charm. The improvement arc from episode 7 to a future v2 is subscriber gold.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FILMING TIPS -->
+<div class="block">
+  <div class="block-label">// On Camera</div>
+  <div class="block-title">Filming Strategy</div>
+
+  <div class="tips">
+    <div class="tip">
+      <div class="tip-icon">🎬</div>
+      <h4>Always Film Setup Fails</h4>
+      <p>Keep a second camera running at all times during build sessions. The moments you'd normally cut — the confused face, the rereading of a datasheet, the wrong part — those are your best shorts material.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">📺</div>
+      <h4>Terminal on Screen = Content</h4>
+      <p>Show your terminal. When STT outputs garbage transcriptions or the LLM returns something unexpected — zoom in. That text on screen is visual gold and gives technical viewers something to read and pause on.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">🎭</div>
+      <h4>The "Homeless Guy" Bit</h4>
+      <p>Commit to the character. Tape the Pi to a lanyard. Wear the jank glasses in public once. Film the reactions. The contrast between "this looks ridiculous" and "this actually works" is your entire comedy engine.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">⏱️</div>
+      <h4>Real-Time Demo Format</h4>
+      <p>Every episode should end with a live demo: say something out loud, ask the system about it 30 seconds later, show the response. Even when it partially fails, this live format is gripping. Don't cut it — show the wait time.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">📊</div>
+      <h4>Show Numbers</h4>
+      <p>Latency (how long it takes to respond). Memory size (how many conversations stored). Accuracy rate (% of words correctly transcribed). These numbers changing episode-by-episode give people a reason to track progress.</p>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">🎵</div>
+      <h4>Use Your Music Here</h4>
+      <p>Your original tracks as background during build montages. This series — with its hacker aesthetic — is the perfect home for your music. The mood should match: something lo-fi, moody, determined.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div>
+    <div class="footer-name">PARALLEL MIND</div>
+    <div class="footer-sub">Project Bible · Version 1.0</div>
+  </div>
+  <div class="footer-right">
+    Estimated total build time: 3–6 weeks<br>
+    Estimated shoot time: 8 videos × 2hrs filming<br>
+    LLM cost: $0 · Hardware: ~$180
+  </div>
+</div>
+
+</body>
+</html>

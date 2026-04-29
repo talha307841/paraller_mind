@@ -1,0 +1,78 @@
+# ─── Core ─────────────────────────────────────────────────────────────────────
+numpy>=1.24.0
+python-dotenv>=1.0.0
+loguru>=0.7.0
+
+# ─── Audio I/O ────────────────────────────────────────────────────────────────
+# PyAudio for mic capture (requires portaudio19-dev — see setup.sh)
+pyaudio>=0.2.14
+# sounddevice for TTS playback
+sounddevice>=0.4.6
+soundfile>=0.12.1
+
+# ─── VAD — Silero (loaded via torch.hub, no extra package) ───────────────────
+torch>=2.1.0
+# NOTE: torch on Pi 5 ARM64 — install from PyPI arm64 wheel or via:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+# ─── STT — faster-whisper ─────────────────────────────────────────────────────
+faster-whisper>=1.0.0
+
+# ─── Memory ───────────────────────────────────────────────────────────────────
+chromadb>=0.5.0
+sentence-transformers>=2.7.0
+spacy>=3.7.0
+
+# ─── LLM clients ──────────────────────────────────────────────────────────────
+# openai SDK used for NVIDIA NIM, Gemini, and GitHub Models (all OAI-compat)
+openai>=1.30.0
+# Groq native client (fallback)
+groq>=0.9.0
+
+# ─── TTS — Piper ──────────────────────────────────────────────────────────────
+piper-tts>=1.2.0
+
+# ─── API Server ───────────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+# ─── Parallel Mind — Python Requirements ─────────────────────────────────────
+# Install with:  pip3 install -r requirements.txt
+#
+# NOTE: Piper TTS binary is installed separately by setup.sh (not pip).
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Speech-to-Text ────────────────────────────────────────────────────────────
+faster-whisper>=1.0.3
+
+# ── Audio ─────────────────────────────────────────────────────────────────────
+PyAudio>=0.2.14
+
+# ── Voice Activity Detection ──────────────────────────────────────────────────
+# silero-vad provides the VADIterator API (also pulls in torch ≥ 2.0)
+silero-vad>=5.1
+torch>=2.0.0
+
+# ── Vector Memory (ChromaDB) ──────────────────────────────────────────────────
+chromadb>=0.5.0
+
+# ── Embeddings ────────────────────────────────────────────────────────────────
+sentence-transformers>=3.0.0
+
+# ── Natural-language topic tagging ────────────────────────────────────────────
+spacy>=3.7.0
+# spaCy model:  python3 -m spacy download en_core_web_sm  (done by setup.sh)
+
+# ── LLM clients (NVIDIA NIM + Groq — both use OpenAI SDK) ────────────────────
+openai>=1.30.0
+
+# ── REST API (optional web interface) ────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.0.0
+
+# ── Config ────────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+numpy>=1.26.0
